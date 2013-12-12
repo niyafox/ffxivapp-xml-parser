@@ -41,6 +41,9 @@ namespace FfxivXmlLogParser
         // The text or action being performed
         private string _line;
 
+        // Cached copy of the result of ToString() to avoid doing the formatting each time
+        protected string _toStringCache;
+
         protected string Timestamp
         {
             get { return _timestamp; }
@@ -89,6 +92,9 @@ namespace FfxivXmlLogParser
                 _actor = parts[0];
                 _line = removeTargetMetaData(parts[1]);
             }
+
+            // Clear the cache, since the string "changed"
+            _toStringCache = null;
         }
 
         /// <summary>
@@ -122,7 +128,7 @@ namespace FfxivXmlLogParser
                 ConstructorInfo constructorInfo = _EntryTypeToLogType[entryType];
 
                 // Create the parameters
-                Object[] constructorParameters = new Object[3]{(int)entryType, timestamp, line};
+                Object[] constructorParameters = new Object[3] { (int)entryType, timestamp, line };
                 return (XmlLogLine)constructorInfo.Invoke(constructorParameters);
             }
             else
@@ -138,7 +144,7 @@ namespace FfxivXmlLogParser
             _EntryTypeToLogType = new Dictionary<LogType, ConstructorInfo>();
 
             // All the constructors have the same parameters - int, string, string
-            Type[] constructorParams = new Type[3]{typeof(int), typeof(string), typeof(string)};
+            Type[] constructorParams = new Type[3] { typeof(int), typeof(string), typeof(string) };
 
             // Init the mapping
             _EntryTypeToLogType.Add(LogType.Say, typeof(SayLogLine).GetConstructor(constructorParams));
@@ -168,7 +174,11 @@ namespace FfxivXmlLogParser
 
         public override string ToString()
         {
-            return String.Format("{0} {1}: {2}", Timestamp, Actor, Line);
+            if (_toStringCache == null)
+            {
+                _toStringCache = String.Format("{0} {1}: {2}", Timestamp, Actor, Line);
+            }
+            return _toStringCache;
         }
     }
 
@@ -181,7 +191,11 @@ namespace FfxivXmlLogParser
 
         public override string ToString()
         {
-            return String.Format("{0} >> {1}: {2}", Timestamp, Actor, Line);
+            if (_toStringCache == null)
+            {
+                _toStringCache = String.Format("{0} >> {1}: {2}", Timestamp, Actor, Line);
+            }
+            return _toStringCache;
         }
     }
 
@@ -194,7 +208,11 @@ namespace FfxivXmlLogParser
 
         public override string ToString()
         {
-            return String.Format("{0} {1} >> {2}", Timestamp, Actor, Line);
+            if (_toStringCache == null)
+            {
+                _toStringCache = String.Format("{0} {1} >> {2}", Timestamp, Actor, Line);
+            }
+            return _toStringCache;
         }
     }
 
@@ -208,7 +226,11 @@ namespace FfxivXmlLogParser
 
         public override string ToString()
         {
-            return String.Format("{0} {1}", Timestamp, Line);
+            if (_toStringCache == null)
+            {
+                _toStringCache = String.Format("{0} {1}", Timestamp, Line);
+            }
+            return _toStringCache;
         }
     }
 
@@ -221,7 +243,11 @@ namespace FfxivXmlLogParser
 
         public override string ToString()
         {
-            return String.Format("{0} {1} {2}", Timestamp, Actor, Line);
+            if (_toStringCache == null)
+            {
+                _toStringCache = String.Format("{0} {1} {2}", Timestamp, Actor, Line);
+            }
+            return _toStringCache;
         }
     }
 
@@ -234,7 +260,11 @@ namespace FfxivXmlLogParser
 
         public override string ToString()
         {
-            return String.Format("{0} ({1}) {2}", Timestamp, Actor, Line);
+            if (_toStringCache == null)
+            {
+                _toStringCache = String.Format("{0} ({1}) {2}", Timestamp, Actor, Line);
+            }
+            return _toStringCache;
         }
     }
 
@@ -258,7 +288,11 @@ namespace FfxivXmlLogParser
 
         public override string ToString()
         {
-            return String.Format("{0} [{1}] <{2}> {3}", Timestamp, _linkshell, Actor, Line);
+            if (_toStringCache == null)
+            {
+                _toStringCache = String.Format("{0} [{1}] <{2}> {3}", Timestamp, _linkshell, Actor, Line);
+            }
+            return _toStringCache;
         }
     }
 }

@@ -32,6 +32,9 @@ namespace FfxivXmlLogParser
 
     abstract class XmlLogLine
     {
+        // Entry type for this log
+        private LogType _entryType;
+
         // Timestamp for this line
         private string _timestamp;
 
@@ -43,6 +46,11 @@ namespace FfxivXmlLogParser
 
         // Cached copy of the result of ToString() to avoid doing the formatting each time
         protected string _toStringCache;
+
+        public LogType EntryType
+        {
+            get { return _entryType; }
+        }
 
         protected string Timestamp
         {
@@ -62,7 +70,7 @@ namespace FfxivXmlLogParser
         private char[] ACTOR_SEPARATOR = { ':' };
 
         // Only derived classes can generate log lines, but it's an abstract class anyway
-        protected XmlLogLine(string timestamp, string line)
+        protected XmlLogLine(LogType entryType, string timestamp, string line)
         {
             if (timestamp == null || line == null)
             {
@@ -92,6 +100,9 @@ namespace FfxivXmlLogParser
                 _actor = parts[0];
                 _line = removeTargetMetaData(parts[1]);
             }
+
+            // Save the entry type for later
+            _entryType = entryType;
 
             // Clear the cache, since the string "changed"
             _toStringCache = null;
@@ -144,7 +155,7 @@ namespace FfxivXmlLogParser
             _EntryTypeToLogType = new Dictionary<LogType, ConstructorInfo>();
 
             // All the constructors have the same parameters - int, string, string
-            Type[] constructorParams = new Type[3] { typeof(int), typeof(string), typeof(string) };
+            Type[] constructorParams = new Type[3] { typeof(LogType), typeof(string), typeof(string) };
 
             // Init the mapping
             _EntryTypeToLogType.Add(LogType.Say, typeof(SayLogLine).GetConstructor(constructorParams));
@@ -167,8 +178,8 @@ namespace FfxivXmlLogParser
 
     class SayLogLine : XmlLogLine
     {
-        public SayLogLine(int entryKey, string timestamp, string line)
-            : base(timestamp, line)
+        public SayLogLine(LogType entryKey, string timestamp, string line)
+            : base(entryKey, timestamp, line)
         {
         }
 
@@ -184,8 +195,8 @@ namespace FfxivXmlLogParser
 
     class TellSentLogLine : XmlLogLine
     {
-        public TellSentLogLine(int entryKey, string timestamp, string line)
-            : base(timestamp, line)
+        public TellSentLogLine(LogType entryKey, string timestamp, string line)
+            : base(entryKey, timestamp, line)
         {
         }
 
@@ -201,8 +212,8 @@ namespace FfxivXmlLogParser
 
     class TellReceivedLogLine : XmlLogLine
     {
-        public TellReceivedLogLine(int entryKey, string timestamp, string line)
-            : base(timestamp, line)
+        public TellReceivedLogLine(LogType entryKey, string timestamp, string line)
+            : base(entryKey, timestamp, line)
         {
         }
 
@@ -218,8 +229,8 @@ namespace FfxivXmlLogParser
 
     class EmoteLogLine : XmlLogLine
     {
-        public EmoteLogLine(int entryKey, string timestamp, string line)
-            : base(timestamp, line)
+        public EmoteLogLine(LogType entryKey, string timestamp, string line)
+            : base(entryKey, timestamp, line)
         {
             // Emotes include an actor when it's you, but not when it's someone else... I'm not sure it matters right now
         }
@@ -236,8 +247,8 @@ namespace FfxivXmlLogParser
 
     class FreeformEmoteLogLine : XmlLogLine
     {
-        public FreeformEmoteLogLine(int entryKey, string timestamp, string line)
-            : base(timestamp, line)
+        public FreeformEmoteLogLine(LogType entryKey, string timestamp, string line)
+            : base(entryKey, timestamp, line)
         {
         }
 
@@ -253,8 +264,8 @@ namespace FfxivXmlLogParser
 
     class PartyLogLine : XmlLogLine
     {
-        public PartyLogLine(int entryKey, string timestamp, string line)
-            : base(timestamp, line)
+        public PartyLogLine(LogType entryKey, string timestamp, string line)
+            : base(entryKey, timestamp, line)
         {
         }
 
@@ -272,14 +283,14 @@ namespace FfxivXmlLogParser
     {
         private string _linkshell;
 
-        public LinkshellLogLine(int entryKey, string timestamp, string line)
-            : base(timestamp, line)
+        public LinkshellLogLine(LogType entryKey, string timestamp, string line)
+            : base(entryKey, timestamp, line)
         {
-            if (entryKey == (int)LogType.FreeCompany)
+            if (entryKey == LogType.FreeCompany)
             {
                 _linkshell = "FC";
             }
-            else if (entryKey >= (int)LogType.Linkshell1 && entryKey <= (int)LogType.Linkshell8)
+            else if ((int)entryKey >= (int)LogType.Linkshell1 && (int)entryKey <= (int)LogType.Linkshell8)
             {
                 // linkshell number
                 _linkshell = ((entryKey - (int)LogType.Linkshell1) + 1).ToString();

@@ -27,6 +27,23 @@ namespace FfxivXmlLogParser
             logWindow.DragEnter += new DragEventHandler(logWindow_OnDragEnter);
             logWindow.DragDrop += new DragEventHandler(logWindow_OnDrop);
 
+            // Attach tag data -- parent controls
+            sayEmoteCheckbox.Tag = sayEmoteTypes;
+            partyCheckbox.Tag = partyTypes;
+            tellsCheckbox.Tag = tellsTypes;
+            linkshellsCheckbox.Tag = linkshellTypes;
+
+            // Attach tag data -- linkshells context menu
+            linkshell1Enabled.Tag = LogType.Linkshell1;
+            linkshell2Enabled.Tag = LogType.Linkshell2;
+            linkshell3Enabled.Tag = LogType.Linkshell3;
+            linkshell4Enabled.Tag = LogType.Linkshell4;
+            linkshell5Enabled.Tag = LogType.Linkshell5;
+            linkshell6Enabled.Tag = LogType.Linkshell6;
+            linkshell7Enabled.Tag = LogType.Linkshell7;
+            linkshell8Enabled.Tag = LogType.Linkshell8;
+            freeCompanyEnabled.Tag = LogType.FreeCompany;
+
             // By default all the log types are enabled
             foreach (LogType type in (LogType[])Enum.GetValues(typeof(LogType)))
             {
@@ -73,6 +90,12 @@ namespace FfxivXmlLogParser
         // A lock is likely unnecessary, as all the updates /should/ be coming from the same (UI) thread, but I do not trust
         private Object linkshellLock = new Object();
 
+        // Create lists for which are enabled/disabled for each checkbox
+        private LogType[] sayEmoteTypes = { LogType.Say, LogType.Emote, LogType.EmoteFreeform };
+        private LogType[] partyTypes = { LogType.Party };
+        private LogType[] tellsTypes = { LogType.TellSent, LogType.TellReceived };
+        private LogType[] linkshellTypes = { LogType.FreeCompany, LogType.Linkshell1, LogType.Linkshell2, LogType.Linkshell3, LogType.Linkshell4, LogType.Linkshell5, LogType.Linkshell6, LogType.Linkshell7, LogType.Linkshell8 };
+
         /// <summary>
         /// Manages the high level enable/disable checkbox changed state for things like say/emote, as well as enabling
         /// or disabling *all* linkshells, and free company chat, together
@@ -85,12 +108,6 @@ namespace FfxivXmlLogParser
                 return;
             }
 
-            // Create lists for which are enabled/disabled for each checkbox
-            LogType[] sayEmoteTypes = { LogType.Say, LogType.Emote, LogType.EmoteFreeform };
-            LogType[] partyTypes = { LogType.Party };
-            LogType[] tellsTypes = { LogType.TellSent, LogType.TellReceived };
-            LogType[] linkshellTypes = { LogType.FreeCompany, LogType.Linkshell1, LogType.Linkshell2, LogType.Linkshell3, LogType.Linkshell4, LogType.Linkshell5, LogType.Linkshell6, LogType.Linkshell7, LogType.Linkshell8 };
-
             // Just for sanity
             if (sender.GetType() != typeof(CheckBox))
             {
@@ -101,26 +118,24 @@ namespace FfxivXmlLogParser
             // Get the updated state
             bool enabed = ((CheckBox)sender).Checked;
 
+            // And the list to update (from the tags)
+            Object objTag = ((CheckBox)sender).Tag;
+
             // The list we're updating now
             LogType[] enableDisableSet;
+            try
+            {
+                enableDisableSet = (LogType[])objTag;
+            }
+            catch (InvalidCastException)
+            {
+                // Somehow?
+                return;
+            }
 
-            // Set the set of things to enable to disable
-            if (sender == sayEmoteCheckbox)
+            // Special processing for the linkshell types (because of the child control)
+            if (enableDisableSet == linkshellTypes)
             {
-                enableDisableSet = sayEmoteTypes;
-            }
-            else if (sender == partyCheckbox)
-            {
-                enableDisableSet = partyTypes;
-            }
-            else if (sender == tellsCheckbox)
-            {
-                enableDisableSet = tellsTypes;
-            }
-            else if (sender == linkshellsCheckbox)
-            {
-                enableDisableSet = linkshellTypes;
-
                 // Because there's the entire list based here in the context menu, we need to update it to be accurate
                 lock (linkshellLock)
                 {
@@ -133,11 +148,6 @@ namespace FfxivXmlLogParser
                     }
                     linkshellParentUpdating = false;
                 }
-            }
-            else
-            {
-                // I don't know...
-                return;
             }
 
             // Add or remove?
@@ -173,51 +183,26 @@ namespace FfxivXmlLogParser
                 return;
             }
 
-            LogType selectedType;
-
-            if (sender == linkshell1Enabled)
+            // Just verify the data first
+            if (sender.GetType() != typeof(ToolStripMenuItem))
             {
-                selectedType = LogType.Linkshell1;
-            }
-            else if (sender == linkshell2Enabled)
-            {
-                selectedType = LogType.Linkshell2;
-            }
-            else if (sender == linkshell3Enabled)
-            {
-                selectedType = LogType.Linkshell3;
-            }
-            else if (sender == linkshell4Enabled)
-            {
-                selectedType = LogType.Linkshell4;
-            }
-            else if (sender == linkshell5Enabled)
-            {
-                selectedType = LogType.Linkshell5;
-            }
-            else if (sender == linkshell6Enabled)
-            {
-                selectedType = LogType.Linkshell6;
-            }
-            else if (sender == linkshell7Enabled)
-            {
-                selectedType = LogType.Linkshell7;
-            }
-            else if (sender == linkshell8Enabled)
-            {
-                selectedType = LogType.Linkshell8;
-            }
-            else if (sender == freeCompanyEnabled)
-            {
-                selectedType = LogType.FreeCompany;
-            }
-            else
-            {
-                // ... I don't know
                 return;
             }
 
-            bool enabled = ((ToolStripMenuItem)sender).Checked;
+            // Cast it so we can use it more easily
+            ToolStripMenuItem senderItem = (ToolStripMenuItem)sender;
+
+            // Now check the tag data
+            if (senderItem.Tag.GetType() != typeof(LogType))
+            {
+                // ???
+                return;
+            }
+
+            // Get the selected type from the tag
+            LogType selectedType = (LogType)senderItem.Tag;
+
+            bool enabled = senderItem.Checked;
             if (enabled)
             {
                 _enabledTypes.Add(selectedType);

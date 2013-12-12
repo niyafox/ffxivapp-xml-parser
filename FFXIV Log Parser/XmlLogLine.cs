@@ -56,11 +56,6 @@ namespace FfxivXmlLogParser
             get { return _line; }
         }
 
-        public string Format()
-        {
-            return doFormat();
-        }
-
         private char[] ACTOR_SEPARATOR = { ':' };
 
         // Only derived classes can generate log lines, but it's an abstract class anyway
@@ -95,9 +90,6 @@ namespace FfxivXmlLogParser
                 _line = removeTargetMetaData(parts[1]);
             }
         }
-
-        // Each type of log line will implement this properly for their own formatting
-        protected abstract string doFormat();
 
         /// <summary>
         /// Helper method to clean off targetting metadata from a log line -- this may not be good later, as we may want to
@@ -174,7 +166,7 @@ namespace FfxivXmlLogParser
         {
         }
 
-        override protected string doFormat()
+        public override string ToString()
         {
             return String.Format("{0} {1}: {2}", Timestamp, Actor, Line);
         }
@@ -187,7 +179,7 @@ namespace FfxivXmlLogParser
         {
         }
 
-        override protected string doFormat()
+        public override string ToString()
         {
             return String.Format("{0} >> {1}: {2}", Timestamp, Actor, Line);
         }
@@ -200,7 +192,7 @@ namespace FfxivXmlLogParser
         {
         }
 
-        override protected string doFormat()
+        public override string ToString()
         {
             return String.Format("{0} {1} >> {2}", Timestamp, Actor, Line);
         }
@@ -214,7 +206,7 @@ namespace FfxivXmlLogParser
             // Emotes include an actor when it's you, but not when it's someone else... I'm not sure it matters right now
         }
 
-        override protected string doFormat()
+        public override string ToString()
         {
             return String.Format("{0} {1}", Timestamp, Line);
         }
@@ -227,7 +219,7 @@ namespace FfxivXmlLogParser
         {
         }
 
-        override protected string doFormat()
+        public override string ToString()
         {
             return String.Format("{0} {1} {2}", Timestamp, Actor, Line);
         }
@@ -240,7 +232,7 @@ namespace FfxivXmlLogParser
         {
         }
 
-        override protected string doFormat()
+        public override string ToString()
         {
             return String.Format("{0} ({1}) {2}", Timestamp, Actor, Line);
         }
@@ -264,7 +256,7 @@ namespace FfxivXmlLogParser
             }
         }
 
-        override protected string doFormat()
+        public override string ToString()
         {
             return String.Format("{0} [{1}] <{2}> {3}", Timestamp, _linkshell, Actor, Line);
         }

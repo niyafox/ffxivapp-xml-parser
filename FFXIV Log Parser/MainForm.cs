@@ -167,7 +167,7 @@ namespace FfxivXmlLogParser
                     // Only add enabled line types
                     if (_enabledTypes.Contains(line.GetType()))
                     {
-                        sb.Append(line.Format()).Append(Environment.NewLine);
+                        sb.Append(line).Append(Environment.NewLine);
                     }
                 }
             }

@@ -11,18 +11,15 @@ using System.Threading;
 
 namespace FfxivXmlLogParser
 {
-    public partial class Form1 : Form
+    public partial class MainForm : Form
     {
         // Enabled logs
-        private SortedSet<LogType> _enabledTypes = new SortedSet<LogType>();
+        private HashSet<Type> _enabledTypes = new HashSet<Type>();
 
         // Logs that are currently open in the window
         private List<XmlLog> _logs = new List<XmlLog>();
 
-        // Our update worker
-        private System.ComponentModel.BackgroundWorker logWindowTextUpdater = new System.ComponentModel.BackgroundWorker();
-
-        public Form1()
+        public MainForm()
         {
             InitializeComponent();
 
@@ -31,24 +28,25 @@ namespace FfxivXmlLogParser
             logWindowTextUpdater.RunWorkerCompleted += new RunWorkerCompletedEventHandler(logWindowTextUpdater_RunWorkerCompleted);
 
             // Setup Event handlers
-            logWindow.DragEnter += new DragEventHandler(OnDragEnter);
-            logWindow.DragDrop += new DragEventHandler(OnDrop);
+            logWindow.DragEnter += new DragEventHandler(logWindow_OnDragEnter);
+            logWindow.DragDrop += new DragEventHandler(logWindow_OnDrop);
 
             // By default all the log types are enabled
-            foreach (LogType type in (LogType[])Enum.GetValues(typeof(LogType)))
-            {
-                _enabledTypes.Add(type);
-            }
-            // But don't enable 'unknown'
-            _enabledTypes.Remove(LogType.Unknown);
+            _enabledTypes.Add(typeof(SayLogLine));
+            _enabledTypes.Add(typeof(TellSentLogLine));
+            _enabledTypes.Add(typeof(TellReceivedLogLine));
+            _enabledTypes.Add(typeof(PartyLogLine));
+            _enabledTypes.Add(typeof(EmoteLogLine));
+            _enabledTypes.Add(typeof(FreeformEmoteLogLine));
+            _enabledTypes.Add(typeof(LinkshellLogLine));
         }
 
-        void OnDragEnter(object sender, DragEventArgs e)
+        void logWindow_OnDragEnter(object sender, DragEventArgs e)
         {
             e.Effect = DragDropEffects.Copy;
         }
 
-        private void OnDrop(object sender, DragEventArgs e)
+        private void logWindow_OnDrop(object sender, DragEventArgs e)
         {
             // Clear the log list
             _logs.Clear();
@@ -76,14 +74,13 @@ namespace FfxivXmlLogParser
         private void OnCheckedChanged(object sender, EventArgs e)
         {
             // Create lists for which are enabled/disabled for each checkbox
-            LogType[] sayEmoteTypes = { LogType.Say, LogType.Emote, LogType.EmoteFreeform };
-            LogType[] partyTypes = { LogType.Party };
-            LogType[] tellsTypes = { LogType.TellSent, LogType.TellReceived };
-            LogType[] freeCompanyTypes = { LogType.FreeCompany };
-            LogType[] linkshellsType = { LogType.Linkshell1, LogType.Linkshell2, LogType.Linkshell3, LogType.Linkshell4, LogType.Linkshell5, LogType.Linkshell6, LogType.Linkshell7, LogType.Linkshell8 };
+            Type[] sayEmoteTypes = { typeof(SayLogLine), typeof(EmoteLogLine), typeof(FreeformEmoteLogLine) };
+            Type[] partyTypes = { typeof(PartyLogLine) };
+            Type[] tellsTypes = { typeof(TellReceivedLogLine), typeof(TellSentLogLine) };
+            Type[] linkshellTypes = { typeof(LinkshellLogLine) };
 
             // The list we're updating now
-            LogType[] enableDisableSet;
+            Type[] enableDisableSet;
 
             if (sender == sayEmoteCheckbox)
             {
@@ -97,13 +94,9 @@ namespace FfxivXmlLogParser
             {
                 enableDisableSet = tellsTypes;
             }
-            else if (sender == freeCompanyCheckbox)
-            {
-                enableDisableSet = freeCompanyTypes;
-            }
             else if (sender == linkshellsCheckbox)
             {
-                enableDisableSet = linkshellsType;
+                enableDisableSet = linkshellTypes;
             }
             else
             {
@@ -115,7 +108,7 @@ namespace FfxivXmlLogParser
             if (_enabledTypes.Contains(enableDisableSet[0]))
             {
                 // Disable logs
-                foreach (LogType type in enableDisableSet)
+                foreach (Type type in enableDisableSet)
                 {
                     _enabledTypes.Remove(type);
                 }
@@ -123,7 +116,7 @@ namespace FfxivXmlLogParser
             else
             {
                 // Enable logs
-                foreach (LogType type in enableDisableSet)
+                foreach (Type type in enableDisableSet)
                 {
                     _enabledTypes.Add(type);
                 }
@@ -162,8 +155,6 @@ namespace FfxivXmlLogParser
 
         private string UpdateLogs(BackgroundWorker worker, DoWorkEventArgs e)
         {
-            Console.WriteLine("Starting UpdateLogs");
-
             // Start over
             sb.Clear();
 
@@ -174,14 +165,12 @@ namespace FfxivXmlLogParser
                 foreach (XmlLogLine line in log.Lines)
                 {
                     // Only add enabled line types
-                    if (_enabledTypes.Contains(line.LogType))
+                    if (_enabledTypes.Contains(line.GetType()))
                     {
-                        sb.Append(line.Formatted).Append(Environment.NewLine);
+                        sb.Append(line.Format()).Append(Environment.NewLine);
                     }
                 }
             }
-
-            Console.WriteLine("UpdateLogs finished!");
 
             // Done with our work
             return sb.ToString();

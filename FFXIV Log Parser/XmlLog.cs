@@ -8,107 +8,16 @@ using System.Globalization;
 
 namespace FfxivXmlLogParser
 {
-    class XmlLogLine
-    {
-        private LogType _logType;
-        private string _timestamp;
-        private string _line;
-
-        public LogType LogType
-        {
-            get { return _logType; }
-        }
-
-        public string Timestamp
-        {
-            get { return _timestamp; }
-        }
-
-        public string Line
-        {
-            get { return _line; }
-        }
-
-        public XmlLogLine(LogType type, string timestamp, string line)
-        {
-            // If a line has a target in it, there's metadata embedded inside in the form of [010101...]targetName - remove it
-            if (line.IndexOf("[010101") > 0)
-            {
-                line = Regex.Replace(line, "[[]010101[0-9a-fA-F]*[]]", "");
-            }
-            if (line.IndexOf("[CF0101") > 0)
-            {
-                line = Regex.Replace(line, "[[]CF0101[0-9a-fA-F]*[]]", "");
-            }
-
-            _logType = type;
-            _timestamp = timestamp;
-            _line = line;
-        }
-
-        public string Formatted
-        {
-            get
-            {
-                // Prefix for each message
-                string prefix = null;
-
-                // For now, just process certain types
-                switch (_logType)
-                {
-                    case LogType.Say:
-                        prefix = "";
-                        break;
-                    case LogType.TellReceived:
-                    case LogType.TellSent:
-                        prefix = "(tell)";
-                        break;
-                    case LogType.Party:
-                        prefix = "(party)";
-                        break;
-                    case LogType.Linkshell1:
-                        prefix = "(ls1)";
-                        break;
-                    case LogType.Linkshell2:
-                        prefix = "(ls2)";
-                        break;
-                    case LogType.Linkshell3:
-                        prefix = "(ls3)";
-                        break;
-                    case LogType.Linkshell4:
-                        prefix = "(ls4)";
-                        break;
-                    case LogType.Linkshell5:
-                        prefix = "(ls5)";
-                        break;
-                    case LogType.Linkshell6:
-                        prefix = "(ls6)";
-                        break;
-                    case LogType.Linkshell7:
-                        prefix = "(ls7)";
-                        break;
-                    case LogType.Linkshell8:
-                        prefix = "(ls8)";
-                        break;
-                    case LogType.FreeCompany:
-                        prefix = "(FreeCompany)";
-                        break;
-                    case LogType.EmoteFreeform:
-                    case LogType.Emote:
-                        prefix = "*";
-                        break;
-                }
-
-                return String.Format("{0} {1} {2}", _timestamp, prefix, _line);
-            }
-        }
-    }
-
     class XmlLog
     {
+        private const string ENTRY_TAG = "Entry";
+
         private string _path;
         private List<XmlLogLine> _lines = new List<XmlLogLine>();
 
+        /// <summary>
+        /// Path of the log file
+        /// </summary>
         public string Path
         {
             get
@@ -117,6 +26,9 @@ namespace FfxivXmlLogParser
             }
         }
 
+        /// <summary>
+        /// Parsed lines of the log
+        /// </summary>
         public List<XmlLogLine> Lines 
         {
             get {
@@ -124,18 +36,32 @@ namespace FfxivXmlLogParser
             }
         }
         
-
+        /// <summary>
+        /// Construct an XmlLog object containing all the conversation lines given an xml log file
+        /// </summary>
+        /// <param name="path">Path to the log file to parse</param>
         public XmlLog(string path)
         {
-            // Save the path for no good reason
+            // Save the path to provide it back later (if needed)
             _path = path;
 
             try
             {
-                XmlDocument xmlDoc = new XmlDocument(); // Create an XML document object
+                // Create an XML document and attempt to load the provided file into it
+                XmlDocument xmlDoc = new XmlDocument();
                 xmlDoc.Load(_path);
 
-                XmlNodeList entries = xmlDoc.GetElementsByTagName("Entry");
+                // Find all the entry nodes
+                XmlNodeList entries = xmlDoc.GetElementsByTagName(ENTRY_TAG);
+                
+                // Were there any?
+                if (entries == null || entries.Count < 1)
+                {
+                    // Either the log is empty or it wasn't a valid log file to begin with
+                    return;
+                }
+
+                // Parse each entry
                 foreach (XmlNode entry in entries)
                 {
                     parseEntry(entry);
@@ -149,7 +75,7 @@ namespace FfxivXmlLogParser
             }
         }
 
-        void parseEntry(XmlNode entry)
+        private void parseEntry(XmlNode entry)
         {
             // First, do a bunch of stupid stuff to convert the int to an enum so we can pretend to be a good programmer
             int entryTypeInt = -1;
@@ -159,15 +85,14 @@ namespace FfxivXmlLogParser
                 return;
             }
 
-            LogType entryType = LogType.Unknown;
-            entryType = LogTypeFromInt(entryTypeInt);
-
-            // If the log type is unknown, stop now
-            if (entryType == LogType.Unknown)
+            if (!Enum.IsDefined(typeof(LogType), entryTypeInt))
             {
+                // Unknown type
                 return;
             }
+            LogType entryType = (LogType)entryTypeInt;
 
+            // Process the entry child nodes to retrieve the line text and the timestamp children
             string line = null;
             string timestamp = null;
             foreach (XmlNode child in entry.ChildNodes)
@@ -190,39 +115,11 @@ namespace FfxivXmlLogParser
             }
 
             // Create a log line object and add it to the lines of this log
-            _lines.Add(new XmlLogLine(entryType, timestamp, line));
-        }
-
-        public LogType LogTypeFromInt(int intType)
-        {
-            if (typeof(LogType).IsEnumDefined(intType))
+            XmlLogLine parsedLine = XmlLogLine.CreateFromLine(entryType, timestamp, line);
+            if (parsedLine != null)
             {
-                return (LogType)intType;
-            }
-            else
-            {
-                return LogType.Unknown;
+                _lines.Add(parsedLine);
             }
         }
     }
-
-    public enum LogType
-    {
-        Say = 0x0A,
-        TellSent = 0x0C,
-        TellReceived = 0x0D,
-        Party = 0x0E,
-        EmoteFreeform = 0x1C,
-        Emote = 0x1D,
-        Linkshell1 = 0x10,
-        Linkshell2 = 0x11,
-        Linkshell3 = 0x12,
-        Linkshell4 = 0x13,
-        Linkshell5 = 0x14,
-        Linkshell6 = 0x15,
-        Linkshell7 = 0x16,
-        Linkshell8 = 0x17,
-        FreeCompany = 0x18,
-        Unknown = 0xffff
-    };
 }

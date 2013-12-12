@@ -1,6 +1,6 @@
 ﻿namespace FfxivXmlLogParser
 {
-    partial class Form1
+    partial class MainForm
     {
         /// <summary>
         /// Required designer variable.
@@ -33,8 +33,8 @@
             this.sayEmoteCheckbox = new System.Windows.Forms.CheckBox();
             this.partyCheckbox = new System.Windows.Forms.CheckBox();
             this.tellsCheckbox = new System.Windows.Forms.CheckBox();
-            this.freeCompanyCheckbox = new System.Windows.Forms.CheckBox();
             this.linkshellsCheckbox = new System.Windows.Forms.CheckBox();
+            this.logWindowTextUpdater = new System.ComponentModel.BackgroundWorker();
             this.SuspendLayout();
             // 
             // logWindow
@@ -107,21 +107,6 @@
             this.tellsCheckbox.UseVisualStyleBackColor = true;
             this.tellsCheckbox.CheckedChanged += new System.EventHandler(this.OnCheckedChanged);
             // 
-            // freeCompanyCheckbox
-            // 
-            this.freeCompanyCheckbox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.freeCompanyCheckbox.AutoSize = true;
-            this.freeCompanyCheckbox.Checked = true;
-            this.freeCompanyCheckbox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.freeCompanyCheckbox.Location = new System.Drawing.Point(315, 526);
-            this.freeCompanyCheckbox.Name = "freeCompanyCheckbox";
-            this.freeCompanyCheckbox.Size = new System.Drawing.Size(122, 21);
-            this.freeCompanyCheckbox.TabIndex = 5;
-            this.freeCompanyCheckbox.Text = "Free Company";
-            this.freeCompanyCheckbox.UseVisualStyleBackColor = true;
-            this.freeCompanyCheckbox.CheckedChanged += new System.EventHandler(this.OnCheckedChanged);
-            // 
             // linkshellsCheckbox
             // 
             this.linkshellsCheckbox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
@@ -129,7 +114,7 @@
             this.linkshellsCheckbox.AutoSize = true;
             this.linkshellsCheckbox.Checked = true;
             this.linkshellsCheckbox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.linkshellsCheckbox.Location = new System.Drawing.Point(443, 526);
+            this.linkshellsCheckbox.Location = new System.Drawing.Point(315, 526);
             this.linkshellsCheckbox.Name = "linkshellsCheckbox";
             this.linkshellsCheckbox.Size = new System.Drawing.Size(92, 21);
             this.linkshellsCheckbox.TabIndex = 6;
@@ -137,23 +122,22 @@
             this.linkshellsCheckbox.UseVisualStyleBackColor = true;
             this.linkshellsCheckbox.CheckedChanged += new System.EventHandler(this.OnCheckedChanged);
             // 
-            // Form1
+            // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(782, 555);
             this.Controls.Add(this.linkshellsCheckbox);
-            this.Controls.Add(this.freeCompanyCheckbox);
             this.Controls.Add(this.tellsCheckbox);
             this.Controls.Add(this.partyCheckbox);
             this.Controls.Add(this.sayEmoteCheckbox);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.logWindow);
-            this.Name = "Form1";
+            this.Name = "MainForm";
             this.Text = "FFXIV XML Log Parser";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_Closing);
             this.Load += new System.EventHandler(this.Form1_Load);
-            this.DragDrop += new System.Windows.Forms.DragEventHandler(this.OnDrop);
+            this.DragDrop += new System.Windows.Forms.DragEventHandler(this.logWindow_OnDrop);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -166,8 +150,8 @@
         private System.Windows.Forms.CheckBox sayEmoteCheckbox;
         private System.Windows.Forms.CheckBox partyCheckbox;
         private System.Windows.Forms.CheckBox tellsCheckbox;
-        private System.Windows.Forms.CheckBox freeCompanyCheckbox;
         private System.Windows.Forms.CheckBox linkshellsCheckbox;
+        private System.ComponentModel.BackgroundWorker logWindowTextUpdater;
 
     }
 }
